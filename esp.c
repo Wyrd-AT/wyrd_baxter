@@ -6,7 +6,7 @@
 // ============ CONFIG Wi-Fi e Servidor ============
 const char* SSID        = "MVISIA_2.4GHz";
 const char* PASSWORD    = "mvisia2020";
-const char* SERVER_IP   = "10.0.0.132";
+const char* SERVER_IP   = "10.0.0.149";
 const uint16_t SERVER_PORT = 9500;
 
 // ============ CONFIG NTP ============
@@ -15,7 +15,7 @@ const long   GMT_OFFSET_SEC   = -3 * 3600;  // Brasília
 const int    DAYLIGHT_OFFSET_SEC = 0;
 
 // ============ CONFIG BLE ============
-#define RSSI_THRESHOLD     -72
+#define RSSI_THRESHOLD     -64
 #define INERCIA_CHEGADA    20000
 #define TEMPO_SAIDA        10000
 #define RSSI_HISTORY_SIZE     5
@@ -85,6 +85,7 @@ bool sendState(const char* bed, const char* room, const char* state) {
   String out;
   serializeJson(doc, out);
   out += "\n";
+  Serial.println("JSON: " + out);
 
   client.print(out);
   client.flush();
@@ -94,15 +95,33 @@ bool sendState(const char* bed, const char* room, const char* state) {
 
   // lê até o '\n' ou 2s de timeout
   unsigned long start = millis();
-  while (millis() - start < 2000) {
-    if (client.available()) {
-      String resp = client.readStringUntil('\n');
-      Serial.println("[ESP] ACK: " + resp);
-      break;
-    }
-    delay(50);
-  }
+bool receivedValidAck = false;
+while (millis() - start < 10000) {
+  if (client.available()) {
+    String resp = client.readStringUntil('\n');
+    Serial.println("[ESP] ACK recebido: " + resp);
 
+    StaticJsonDocument<128> doc;
+    DeserializationError error = deserializeJson(doc, resp);
+
+    if (!error) {
+      if (doc.containsKey("status") && doc["status"] == "300") {
+        receivedValidAck = true;
+        Serial.println("[ESP] ACK válido recebido com status 300.");
+        break;
+      } else {
+        Serial.println("[ESP] ACK recebido, mas inválido ou status diferente.");
+      }
+    } else {
+      Serial.println("[ESP] ACK recebido mas não é JSON válido.");
+    }
+  }
+  delay(50);
+}
+
+if (!receivedValidAck) {
+  Serial.println("[ESP] Timeout ou ACK inválido.");
+}
   client.stop();
   return true;
 }
@@ -160,7 +179,7 @@ int calcularMediaRSSI(CamaBLE& cama) {
 
 // Callback BLE
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice &advertisedDevice) override {
+  void onResult(BLEAdvertisedDevice advertisedDevice) override {
     const char* addr = advertisedDevice.getAddress().toString().c_str();
     int rssi = advertisedDevice.getRSSI();
     for (int i=0;i<NUM_CAMAS;i++) {
@@ -276,5 +295,5 @@ void loop() {
     }
   }
 
-  delay(1000);
+  delay(500);
 }
