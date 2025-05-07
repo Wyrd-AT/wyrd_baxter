@@ -1,6 +1,14 @@
+
+import eventlet
+eventlet.monkey_patch()
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 from flask import Flask, render_template_string
 from flask_socketio import SocketIO, emit
 from datetime import datetime, timezone
+import eventlet
 
 # === estado compartilhado ===
 rooms      = { str(i): None for i in range(401, 410) }
@@ -11,9 +19,15 @@ pending    = {}
 def now_iso():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
-# === Flask + Socket.IO ===
+
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(
+    app,
+    async_mode='eventlet',         # ativa WebSocket real
+    cors_allowed_origins='*',
+    logger=True,                   # logs de aplicação
+    engineio_logger=True           # logs do Engine.IO
+)
 
 # HTML/JS básico para browser (inclui cliente Socket.IO)
 TEMPLATE = """
@@ -169,4 +183,4 @@ def on_command(msg):
 
 if __name__ == '__main__':
     # threaded para suportar múltiplos clientes simultâneos
-    socketio.run(app, host='0.0.0.0', port=9500)
+    socketio.run(app, host='10.0.0.149', port=9500, debug=True)

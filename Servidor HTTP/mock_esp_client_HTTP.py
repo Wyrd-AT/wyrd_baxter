@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timezone
 import socketio
 
-SERVER_URL = 'http://10.0.0.149:9500'  # ajuste conforme seu servidor
+SERVER_URL = 'http://192.168.0.3:9500'  # ajuste conforme seu servidor
 
 def now_iso():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
