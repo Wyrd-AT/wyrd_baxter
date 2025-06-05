@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel RTLS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <h1>Painel RTLS</h1>
+  <div id="mensagem-status">Carregando...</div>
+
+  <!-- Tabela para dispositivos por Quarto -->
+  <h2>Dispositivos por Quarto</h2>
+  <table id="device-table-rooms">
+    <thead>
+      <tr>
+        <th>Quarto</th>
+        <th>Dispositivo</th>
+        <th>Última Atualização</th>
+      </tr>
+    </thead>
+    <tbody id="device-table-body-rooms"></tbody>
+  </table>
+
+  <!-- Quadrados dos Quartos -->
+  <div class="rooms-container">
+    <div class="room-box" id="room-1">
+        <h2>Quarto 1</h2>
+        <div class="ativos-lista" id="ativos-1"></div>
+    </div>
+    <div class="room-box" id="room-2">
+        <h2>Quarto 2</h2>
+        <div class="ativos-lista" id="ativos-2"></div>
+    </div>
+    <div class="room-box" id="room-3">
+        <h2>Quarto 3</h2>
+        <div class="ativos-lista" id="ativos-3"></div>
+    </div>
+  </div>
+
+  <!-- Tabela para dispositivos por Ativo -->
+  <h2>Dispositivos por Ativo</h2>
+  <table id="device-table-ativos">
+    <thead>
+      <tr>
+        <th>Dispositivo</th>
+        <th>Quarto</th>
+        <th>Última Atualização</th>
+      </tr>
+    </thead>
+    <tbody id="device-table-body-ativos"></tbody>
+  </table>
+
+  <script>
+    // Função para buscar o status dos dispositivos e quartos
+    async function fetchStatus() {
+      try {
+        const resp = await fetch('/status'); // Faz uma requisição para o endpoint '/status'
+        if (!resp.ok) throw new Error("HTTP " + resp.status); // Verifica se a resposta é OK
+        const data = await resp.json(); // Converte a resposta para JSON
+        return data; // Retorna os dados
+      } catch (err) {
+        console.error("Erro ao buscar /status:", err); // Caso ocorra um erro
+        return null;
+      }
+    }
+
+    // Função para atualizar a tabela de dispositivos por quarto
+    function atualizarTabelaDispositivosPorQuarto(rooms) {
+      const tbody = document.getElementById('device-table-body-rooms');
+      tbody.innerHTML = ''; // Limpa a tabela antes de adicionar novos dados
+
+      Object.keys(rooms).sort().forEach(quarto => {
+        const ativos = rooms[quarto];
+        Object.keys(ativos).sort().forEach(ativoId => {
+          const ts = ativos[ativoId];
+          const tr = document.createElement('tr');
+          const tdQuarto = document.createElement('td');
+          tdQuarto.textContent = quarto;
+          const tdAtivo = document.createElement('td');
+          tdAtivo.textContent = ativoId;
+          const tdTs = document.createElement('td');
+          tdTs.textContent = ts;
+          tr.appendChild(tdQuarto);
+          tr.appendChild(tdAtivo);
+          tr.appendChild(tdTs);
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    // Função para atualizar a tabela de dispositivos por ativo
+    function atualizarTabelaDispositivosPorAtivo(ativos) {
+      const tbody = document.getElementById('device-table-body-ativos');
+      tbody.innerHTML = ''; // Limpa a tabela antes de adicionar novos dados
+
+      Object.keys(ativos).sort().forEach(ativo => {
+        const dados = ativos[ativo];
+        const tr = document.createElement('tr');
+        const tdAtivo = document.createElement('td');
+        tdAtivo.textContent = ativo;
+        const tdQuarto = document.createElement('td');
+        tdQuarto.textContent = dados.quarto || "Sem quarto";
+        const tdTs = document.createElement('td');
+        tdTs.textContent = dados.dataOn;
+        tr.appendChild(tdAtivo);
+        tr.appendChild(tdQuarto);
+        tr.appendChild(tdTs);
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Função para atualizar a interface com os dados
+    async function refreshLoop() {
+      const dados = await fetchStatus(); // Busca os dados
+      if (dados && dados.rooms) {
+        document.getElementById('mensagem-status').textContent = 
+          "Última atualização: " + new Date().toLocaleTimeString();
+        atualizarTabelaDispositivosPorQuarto(dados.rooms);  // Atualiza a tabela de dispositivos por quarto
+        atualizarTabelaDispositivosPorAtivo(dados.ativos);  // Atualiza a tabela de dispositivos por ativo
+        atualizarCards(dados.rooms);  // Atualiza os cartões dos quartos com as bolinhas
+      } else {
+        document.getElementById('mensagem-status').textContent = 
+          "Erro ao obter dados do servidor.";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshLoop(); // Atualiza os dados quando a página é carregada
+      setInterval(refreshLoop, 2000); // Atualiza os dados a cada 2 segundos
+    });
+
+    // Função para atualizar os cartões dos quartos
+    function atualizarCards(rooms) {
+      for (let i = 1; i <= 3; i++) {
+        const roomId = i.toString();
+        const containerAtivos = document.getElementById('ativos-' + i);
+        containerAtivos.innerHTML = '';
+
+        const ativosDoQuarto = rooms[roomId];
+        if (ativosDoQuarto && Object.keys(ativosDoQuarto).length > 0) {
+          // Criação de um contêiner para as bolinhas
+          const bolinhaContainer = document.createElement('div');
+          bolinhaContainer.className = 'bolinha-container';
+
+          Object.keys(ativosDoQuarto).sort().forEach(ativo => {
+            const ts = ativosDoQuarto[ativo];
+            
+            // Criando a bolinha verde
+            const bolinha = document.createElement('span');
+            bolinha.className = 'bolinha-verde';
+
+            const tooltipContainer = document.createElement('div');
+            tooltipContainer.className = 'tooltip';
+
+            const tooltipText = document.createElement('span');
+            tooltipText.className = 'tooltiptext';
+            tooltipText.textContent = `Ativo: ${ativo} — Hora: ${ts}`;
+
+            tooltipContainer.appendChild(bolinha);
+            tooltipContainer.appendChild(tooltipText);
+
+            // Adiciona a bolinha ao contêiner de bolinhas
+            bolinhaContainer.appendChild(tooltipContainer);
+          });
+
+          // Adiciona o contêiner de bolinhas no lugar certo
+          containerAtivos.appendChild(bolinhaContainer);
+        } else {
+          const p = document.createElement('div');
+          p.textContent = 'Nenhum ativo cadastrado.';
+          p.style.color = '#666';
+          containerAtivos.appendChild(p);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

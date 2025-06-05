@@ -78,7 +78,7 @@ def handle_tcp_client(conn, addr):
 def tcp_server():
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    srv.bind(("0.0.0.0", 9500))
+    srv.bind(("10.0.0.149", 9500))
     srv.listen(5)
     print("📡 Raw-TCP server listening on port 9500")
     while True:

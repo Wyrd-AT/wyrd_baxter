@@ -2,7 +2,7 @@
 import socket
 import json
 
-HOST = '172.28.74.164'   # pode trocar para um IP específico, se quiser
+HOST = '10.0.0.149'   # pode trocar para um IP específico, se quiser
 PORT = 9500
 
 def handle_client(conn, addr):
