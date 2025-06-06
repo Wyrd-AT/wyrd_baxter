@@ -4,53 +4,6 @@
   <meta charset="UTF-8">
   <title>Painel RTLS</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <h1>Painel RTLS</h1>
-  <div id="mensagem-status">Carregando...</div>
-
-  <!-- Tabela para dispositivos por Quarto -->
-  <h2>Dispositivos por Quarto</h2>
-  <table id="device-table-rooms">
-    <thead>
-      <tr>
-        <th>Quarto</th>
-        <th>Dispositivo</th>
-        <th>Última Atualização</th>
-      </tr>
-    </thead>
-    <tbody id="device-table-body-rooms"></tbody>
-  </table>
-
-  <!-- Quadrados dos Quartos -->
-  <div class="rooms-container">
-    <div class="room-box" id="room-1">
-        <h2>Quarto 1</h2>
-        <div class="ativos-lista" id="ativos-1"></div>
-    </div>
-    <div class="room-box" id="room-2">
-        <h2>Quarto 2</h2>
-        <div class="ativos-lista" id="ativos-2"></div>
-    </div>
-    <div class="room-box" id="room-3">
-        <h2>Quarto 3</h2>
-        <div class="ativos-lista" id="ativos-3"></div>
-    </div>
-  </div>
-
-  <!-- Tabela para dispositivos por Ativo -->
-  <h2>Dispositivos por Ativo</h2>
-  <table id="device-table-ativos">
-    <thead>
-      <tr>
-        <th>Dispositivo</th>
-        <th>Quarto</th>
-        <th>Última Atualização</th>
-      </tr>
-    </thead>
-    <tbody id="device-table-body-ativos"></tbody>
-  </table>
-
   <script>
     // Função para buscar o status dos dispositivos e quartos
     async function fetchStatus() {
@@ -110,25 +63,31 @@
       });
     }
 
-    // Função para atualizar a interface com os dados
-    async function refreshLoop() {
-      const dados = await fetchStatus(); // Busca os dados
-      if (dados && dados.rooms) {
-        document.getElementById('mensagem-status').textContent = 
-          "Última atualização: " + new Date().toLocaleTimeString();
-        atualizarTabelaDispositivosPorQuarto(dados.rooms);  // Atualiza a tabela de dispositivos por quarto
-        atualizarTabelaDispositivosPorAtivo(dados.ativos);  // Atualiza a tabela de dispositivos por ativo
-        atualizarCards(dados.rooms);  // Atualiza os cartões dos quartos com as bolinhas
-      } else {
-        document.getElementById('mensagem-status').textContent = 
-          "Erro ao obter dados do servidor.";
+    // Função para chamar a rota /reset e limpar todos os dados
+    async function resetDados() {
+      if (!confirm('Tem certeza que deseja resetar todos os dados?')) {
+        return;
+      }
+      try {
+        const resp = await fetch('/reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        if (resp.ok) {
+          const result = await resp.json();
+          alert(result.status); // Exibe "dados resetados"
+          // Atualizar imediatamente a visualização de status
+          refreshLoop();
+        } else {
+          alert('Falha ao resetar os dados');
+        }
+      } catch (err) {
+        console.error('Erro ao chamar /reset:', err);
+        alert('Erro de rede ao resetar');
       }
     }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      refreshLoop(); // Atualiza os dados quando a página é carregada
-      setInterval(refreshLoop, 2000); // Atualiza os dados a cada 2 segundos
-    });
 
     // Função para atualizar os cartões dos quartos
     function atualizarCards(rooms) {
@@ -174,6 +133,78 @@
         }
       }
     }
+
+    // Função para atualizar a interface com os dados
+    async function refreshLoop() {
+      const dados = await fetchStatus(); // Busca os dados
+      if (dados && dados.rooms) {
+        document.getElementById('mensagem-status').textContent =
+          "Última atualização: " + new Date().toLocaleTimeString();
+        atualizarTabelaDispositivosPorQuarto(dados.rooms);  // Atualiza a tabela de dispositivos por quarto
+        atualizarTabelaDispositivosPorAtivo(dados.ativos);  // Atualiza a tabela de dispositivos por ativo
+        atualizarCards(dados.rooms);  // Atualiza os cartões dos quartos com as bolinhas
+      } else {
+        document.getElementById('mensagem-status').textContent =
+          "Erro ao obter dados do servidor.";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshLoop(); // Atualiza os dados quando a página é carregada
+      setInterval(refreshLoop, 2000); // Atualiza os dados a cada 2 segundos
+    });
   </script>
+</head>
+<body>
+  <h1>Painel RTLS</h1>
+
+  <!-- Botão para resetar todos os dados -->
+  <button onclick="resetDados()" style="margin-bottom: 16px; padding: 8px 16px; font-size: 14px; cursor: pointer;">
+    Resetar todos os dados
+  </button>
+
+  <div id="mensagem-status">Carregando...</div>
+
+  <!-- Tabela para dispositivos por Quarto -->
+  <h2>Dispositivos por Quarto</h2>
+  <table id="device-table-rooms">
+    <thead>
+      <tr>
+        <th>Quarto</th>
+        <th>Dispositivo</th>
+        <th>Última Atualização</th>
+      </tr>
+    </thead>
+    <tbody id="device-table-body-rooms"></tbody>
+  </table>
+
+  <!-- Quadrados dos Quartos -->
+  <div class="rooms-container">
+    <div class="room-box" id="room-1">
+      <h2>Quarto 1</h2>
+      <div class="ativos-lista" id="ativos-1"></div>
+    </div>
+    <div class="room-box" id="room-2">
+      <h2>Quarto 2</h2>
+      <div class="ativos-lista" id="ativos-2"></div>
+    </div>
+    <div class="room-box" id="room-3">
+      <h2>Quarto 3</h2>
+      <div class="ativos-lista" id="ativos-3"></div>
+    </div>
+  </div>
+
+  <!-- Tabela para dispositivos por Ativo -->
+  <h2>Dispositivos por Ativo</h2>
+  <table id="device-table-ativos">
+    <thead>
+      <tr>
+        <th>Dispositivo</th>
+        <th>Quarto</th>
+        <th>Última Atualização</th>
+      </tr>
+    </thead>
+    <tbody id="device-table-body-ativos"></tbody>
+  </table>
 </body>
 </html>

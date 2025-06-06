@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request, redirect, url_for
 import threading
 import json
 import socket
@@ -68,7 +68,7 @@ def handle_tcp_client(conn, addr):
                             print(f"[TCP] Ativo desassociado do quarto: {ativo}")
                             ativo_removido = True
                             break
-                    
+
                     if ativo_removido:
                         # Agora você pode manter o ativo registrado sem quarto
                         ativos[ativo]["quarto"] = "Sem quarto"
@@ -124,6 +124,13 @@ def status():
         copia_rooms = {r: {ativo: ts for ativo, ts in rooms[r].items()} for r in rooms}
         copia_ativos = {ativo: dados for ativo, dados in ativos.items()}
     return jsonify(rooms=copia_rooms, ativos=copia_ativos)
+
+@app.route('/reset', methods=['POST'])
+def reset_data():
+    with lock_rooms:
+        rooms.clear()
+        ativos.clear()
+    return jsonify({"status": "dados resetados"})  # ou: redirect(url_for('index'))
 
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=5000)
