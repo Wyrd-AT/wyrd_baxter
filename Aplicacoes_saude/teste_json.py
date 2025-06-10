@@ -9,12 +9,12 @@ def agora_iso():
     """Retorna timestamp ISO-8601 em UTC (ex.: 2025-06-04T15:30:00.000Z)"""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
-def envia_json_teste(host='192.168.0.107', port=9500):
+def envia_json_teste(host='192.168.1.213', port=9500):
     # Monte aqui o dicionário de teste com as mesmas chaves que o ESP enviaria
     msg = {
-        "quarto": "3",
-        "ativo":   "A",
-        "status": "GET",
+        "quarto": "1",
+        "ativo":   "B",
+        "status": "OUT",
         "dataOn": agora_iso()
     }
     texto = json.dumps(msg) + "\n"  # lembre-se do '\n' no final

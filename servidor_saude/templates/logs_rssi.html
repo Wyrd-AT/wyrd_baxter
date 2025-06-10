@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Logs RSSI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <h1>Logs RSSI</h1>
+
+  <div id="mensagem-status">Carregando...</div>
+
+  <!-- Voltar para a home -->
+  <a href="/" style="font-size: 16px;">Voltar para a Home</a>
+  <br><br>
+
+  <!-- Download CSV -->
+  <a href="{{ url_for('download_rssi') }}" style="font-size: 16px;">Download CSV</a>
+  <br><br>
+
+  <!-- Tabela para Logs RSSI -->
+  <h2>Logs de RSSI</h2>
+  <table id="device-table-ativos">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Quarto</th>
+        <th>Dispositivo</th>
+        <th>RSSI</th>
+        <th>Data On</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs_rssi %}
+        <tr>
+          <td>{{ log.server_ts }}</td>
+          <td>{{ log.quarto }}</td>
+          <td>{{ log.ativo }}</td>
+          <td>{{ log.rssi }}</td>
+          <td>{{ log.dataOn }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Paginação -->
+  <div>
+    {% if page > 1 %}
+      <a href="{{ url_for('logs_rssi', page=page-1) }}">Anterior</a>
+    {% endif %}
+    <span>Página {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="{{ url_for('logs_rssi', page=page+1) }}">Próxima</a>
+    {% endif %}
+  </div>
+
+</body>
+</html>

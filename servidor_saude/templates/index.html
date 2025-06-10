@@ -8,12 +8,12 @@
     // Função para buscar o status dos dispositivos e quartos
     async function fetchStatus() {
       try {
-        const resp = await fetch('/status'); // Faz uma requisição para o endpoint '/status'
-        if (!resp.ok) throw new Error("HTTP " + resp.status); // Verifica se a resposta é OK
-        const data = await resp.json(); // Converte a resposta para JSON
-        return data; // Retorna os dados
+        const resp = await fetch('/status');  // Faz uma requisição para o endpoint '/status'
+        if (!resp.ok) throw new Error("HTTP " + resp.status);  // Verifica se a resposta é OK
+        const data = await resp.json();  // Converte a resposta para JSON
+        return data;  // Retorna os dados
       } catch (err) {
-        console.error("Erro ao buscar /status:", err); // Caso ocorra um erro
+        console.error("Erro ao buscar /status:", err);  // Caso ocorra um erro
         return null;
       }
     }
@@ -21,7 +21,7 @@
     // Função para atualizar a tabela de dispositivos por quarto
     function atualizarTabelaDispositivosPorQuarto(rooms) {
       const tbody = document.getElementById('device-table-body-rooms');
-      tbody.innerHTML = ''; // Limpa a tabela antes de adicionar novos dados
+      tbody.innerHTML = '';  // Limpa a tabela antes de adicionar novos dados
 
       Object.keys(rooms).sort().forEach(quarto => {
         const ativos = rooms[quarto];
@@ -45,7 +45,7 @@
     // Função para atualizar a tabela de dispositivos por ativo
     function atualizarTabelaDispositivosPorAtivo(ativos) {
       const tbody = document.getElementById('device-table-body-ativos');
-      tbody.innerHTML = ''; // Limpa a tabela antes de adicionar novos dados
+      tbody.innerHTML = '';  // Limpa a tabela antes de adicionar novos dados
 
       Object.keys(ativos).sort().forEach(ativo => {
         const dados = ativos[ativo];
@@ -63,45 +63,18 @@
       });
     }
 
-    // Função para chamar a rota /reset e limpar todos os dados
-    async function resetDados() {
-      if (!confirm('Tem certeza que deseja resetar todos os dados?')) {
-        return;
-      }
-      try {
-        const resp = await fetch('/reset', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        if (resp.ok) {
-          const result = await resp.json();
-          alert(result.status); // Exibe "dados resetados"
-          // Atualizar imediatamente a visualização de status
-          refreshLoop();
-        } else {
-          alert('Falha ao resetar os dados');
-        }
-      } catch (err) {
-        console.error('Erro ao chamar /reset:', err);
-        alert('Erro de rede ao resetar');
-      }
-    }
-
     // Função para atualizar os cartões dos quartos
     function atualizarCards(rooms) {
       for (let i = 1; i <= 3; i++) {
         const roomId = i.toString();
         const containerAtivos = document.getElementById('ativos-' + i);
-        containerAtivos.innerHTML = '';
+        containerAtivos.innerHTML = '';  // Limpa os dados dos ativos
 
         const ativosDoQuarto = rooms[roomId];
-        if (ativosDoQuarto && Object.keys(ativosDoQuarto).length > 0) {
-          // Criação de um contêiner para as bolinhas
-          const bolinhaContainer = document.createElement('div');
-          bolinhaContainer.className = 'bolinha-container';
+        const bolinhaContainer = document.createElement('div');
+        bolinhaContainer.className = 'bolinha-container';
 
+        if (ativosDoQuarto && Object.keys(ativosDoQuarto).length > 0) {
           Object.keys(ativosDoQuarto).sort().forEach(ativo => {
             const ts = ativosDoQuarto[ativo];
             
@@ -136,7 +109,7 @@
 
     // Função para atualizar a interface com os dados
     async function refreshLoop() {
-      const dados = await fetchStatus(); // Busca os dados
+      const dados = await fetchStatus();  // Busca os dados
       if (dados && dados.rooms) {
         document.getElementById('mensagem-status').textContent =
           "Última atualização: " + new Date().toLocaleTimeString();
@@ -150,33 +123,15 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      refreshLoop(); // Atualiza os dados quando a página é carregada
-      setInterval(refreshLoop, 2000); // Atualiza os dados a cada 2 segundos
+      refreshLoop();  // Atualiza os dados quando a página é carregada
+      setInterval(refreshLoop, 2000);  // Atualiza os dados a cada 2 segundos
     });
   </script>
 </head>
 <body>
   <h1>Painel RTLS</h1>
 
-  <!-- Botão para resetar todos os dados -->
-  <button onclick="resetDados()" style="margin-bottom: 16px; padding: 8px 16px; font-size: 14px; cursor: pointer;">
-    Resetar todos os dados
-  </button>
-
   <div id="mensagem-status">Carregando...</div>
-
-  <!-- Tabela para dispositivos por Quarto -->
-  <h2>Dispositivos por Quarto</h2>
-  <table id="device-table-rooms">
-    <thead>
-      <tr>
-        <th>Quarto</th>
-        <th>Dispositivo</th>
-        <th>Última Atualização</th>
-      </tr>
-    </thead>
-    <tbody id="device-table-body-rooms"></tbody>
-  </table>
 
   <!-- Quadrados dos Quartos -->
   <div class="rooms-container">
@@ -194,6 +149,19 @@
     </div>
   </div>
 
+  <!-- Tabela para dispositivos por Quarto -->
+  <h2>Dispositivos por Quarto</h2>
+  <table id="device-table-rooms">
+    <thead>
+      <tr>
+        <th>Quarto</th>
+        <th>Dispositivo</th>
+        <th>Última Atualização</th>
+      </tr>
+    </thead>
+    <tbody id="device-table-body-rooms"></tbody>
+  </table>
+
   <!-- Tabela para dispositivos por Ativo -->
   <h2>Dispositivos por Ativo</h2>
   <table id="device-table-ativos">
@@ -206,5 +174,15 @@
     </thead>
     <tbody id="device-table-body-ativos"></tbody>
   </table>
+
+  <!-- Links para os logs -->
+  <div>
+    <h2>Visualizar Logs</h2>
+    <ul>
+      <li><a href="/logs_rssi">Ver Logs de RSSI</a></li>
+      <li><a href="/logs_conn">Ver Logs de Conexão</a></li>
+    </ul>
+  </div>
+
 </body>
 </html>

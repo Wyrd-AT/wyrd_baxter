@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Logs de Conexões</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <h1>Logs de Conexões</h1>
+
+  <div id="mensagem-status">Carregando...</div>
+
+  <!-- Voltar para a home -->
+  <a href="/" style="font-size: 16px;">Voltar para a Home</a>
+  <br><br>
+
+  <!-- Download CSV -->
+  <a href="{{ url_for('download_conn') }}" style="font-size: 16px;">Download CSV</a>
+  <br><br>
+
+  <!-- Tabela para Logs de Conexões -->
+  <h2>Logs de Conexões</h2>
+  <table id="device-table-ativos">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Quarto</th>
+        <th>Dispositivo</th>
+        <th>Status</th>
+        <th>Data On</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs_conn %}
+        <tr>
+          <td>{{ log.server_ts }}</td>
+          <td>{{ log.quarto }}</td>
+          <td>{{ log.ativo }}</td>
+          <td>{{ log.status }}</td>
+          <td>{{ log.dataOn }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Paginação -->
+  <div>
+    {% if page > 1 %}
+      <a href="{{ url_for('logs_conn', page=page-1) }}">Anterior</a>
+    {% endif %}
+    <span>Página {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="{{ url_for('logs_conn', page=page+1) }}">Próxima</a>
+    {% endif %}
+  </div>
+
+</body>
+</html>
